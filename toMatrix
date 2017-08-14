@@ -1,0 +1,95 @@
+import pandas as pd
+import numpy as np 
+import matplotlib.pyplot as plt
+from sklearn import linear_model
+
+
+######## 
+#import data 
+########
+
+train = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\train_2016_v2.csv',header =  0)
+prop  = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\properties_2016.csv',header = 0)
+label = pd.read_excel(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\zillow_data_dictionary.xlsx',header = 0)
+
+######## 
+#show histogram 
+########
+
+prop['yearbuilt'].hist()
+prop['yearbuilt'].dropna().hist(bins = 13, range = (1880,2010), alpha = .5)
+
+#######
+# plot locations on google map
+#######
+
+from mpl_toolkits.basemap import Basemap
+
+m = Basemap(projection = 'merc',llcrnrlat = -80,urcrnrlat = 80, llcrnrlon = -180, urcrnrlon = 180,lat_ts = 20, resolution = 'c' )
+m.drawcoastlines()
+m.drawmapboundary()
+x,y = m(list(1e-6*prop['longitude'].astype(float)), list(1e-6*prop['latitude'].astype(float)))
+m.scatter(x,y,1,marker = 'o',color = 'red')
+plt.show()
+
+
+sum(pd.isnull(prop['latitude']))
+sum(pd.isnull(prop['longitude']))
+
+prop1 = prop.sample(frac=0.01, replace=False)  # random sampling
+
+import gmplot 
+gmap = gmplot.GoogleMapPlotter(37.428,-122.45,16)
+gmap.plot([37.428],[-122.45],'cornflowerblue',edge_width = 10)
+gmap.scatter(1e-6*prop1['latitude'].astype(float),1e-6*prop1['longitude'].astype(float),'#3B0B39',size = 40,marker = False)
+'''gmap.scatter(1e-6*prop1['latitude'].astype(float),1e-6*prop1['longitude'].astype(float),'k',marker=True)'''
+gmap.heatmap(1e-6*prop1['latitude'].astype(float),1e-6*prop1['longitude'].astype(float))
+map_styles = [
+        {
+            'featureType': 'all',
+            'stylers': [
+                {'saturation': -80 },
+                {'lightness': 60 },
+            ]
+        }
+    ]
+
+gmap.draw('C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\mymap.html')
+
+########
+# prepare data matrix for machine learning algarithm
+#######
+
+data = pd.merge(train,prop,on ='parcelid')
+
+count = 0
+featCountIn = []
+p = len(data.columns)
+nullCount = data.count(axis = 0)
+for i in range(1,p):
+    if 1.0 * nullCount[i]/ len(data) > 0.1:
+        count  += 1
+        featCountIn.append(data.columns[i]) 
+        print data.columns[i]
+print count 
+
+#  disregard the features with 10% or more missing
+data1 = data[featCountIn]
+# disregard 'object' dtypes 
+data2 = data1.select_dtypes(include=['float64'])
+# fill null as median 
+dataMat = data2.fillna(data1.median())
+
+y = dataMat['logerror'].as_matrix()
+X = dataMat.drop(['logerror','censustractandblock','latitude','longitude',], 1).as_matrix()
+
+from sklearn import linear_model
+clf = linear_model.Lasso(alpha=0.1)
+clf.fit(X,y)
+print(clf.coef_)
+
+
+    
+    
+    
+    
