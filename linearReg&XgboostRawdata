@@ -1,0 +1,95 @@
+import pandas as pd
+import numpy as np 
+import matplotlib.pyplot as plt
+
+train = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\train_2016_v2.csv',header =  0)
+prop  = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\properties_2016.csv',header = 0)
+label = pd.read_excel(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\zillow_data_dictionary.xlsx',header = 0)
+
+data = pd.merge(train,prop,on ='parcelid')
+print(data.dtypes.unique())
+data.select_dtypes(include=['O']).columns.tolist
+#
+[u'transactiondate', u'hashottuborspa', u'propertycountylandusecode',
+       u'propertyzoningdesc', u'fireplaceflag', u'taxdelinquencyflag']
+
+# Check any number of columns with NaN
+print(data.isnull().any().sum(), ' / ', len(data.columns))
+#(47, ' / ', 60)  #
+
+# Check any number of data points with NaN
+print(data.isnull().any(axis=1).sum(), ' / ', len(data))
+
+
+count = 0
+featCountIn = []
+p = len(data.columns)
+nullCount = data.count(axis = 0)
+for i in range(1,p):
+    if 1.0 * nullCount[i]/ len(data) > 0.1:
+        count  += 1
+        featCountIn.append(data.columns[i]) 
+        print data.columns[i]
+print count 
+    
+# after disregard the features with 10% or more missing 
+data1 = data[featCountIn]
+#  disregard 'object' dtypes 
+data2 = data1.select_dtypes(include=['float64'])
+# fill null as medain 
+dataMat = data2.fillna(data1.median())
+
+
+
+
+import math
+from __future__ import division
+from scipy.stats import pearsonr
+from sklearn.linear_model import LinearRegression
+from sklearn import cross_validation, tree, linear_model
+from sklearn.metrics import explained_variance_score
+
+# correlation 
+
+features = dataMat.iloc[:,1:].columns.tolist()
+target = dataMat.iloc[:,0].name
+correlations = {}
+for f in features:
+    data_temp = data[[f,target]]
+    x1 = data_temp[f].values
+    x2 = data_temp[target].values
+    key = f + ' vs ' + target
+    correlations[key] = pearsonr(x1,x2)[0]
+    
+data_correlations = pd.DataFrame(correlations, index=['Value']).T
+data_correlations.loc[data_correlations['Value'].abs().sort_values(ascending=False).index]
+
+y = dataMat['logerror'].as_matrix()
+X = dataMat.drop(['logerror'], 1).as_matrix()
+X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y ,test_size=0.2)
+
+
+# lineat regression:
+
+regr = linear_model.LinearRegression()
+regr.fit(X_train, y_train)
+print sum(np.absolute( regr.predict(X_test)- y_test)) / len(y_test)
+
+# xgboost 
+
+import xgboost as xgb
+
+xgb = xgb.XGBRegressor(n_estimators=100, learning_rate=0.08, gamma=0, subsample=0.75,colsample_bytree=1, max_depth=7)
+traindf, testdf = train_test_split(X_train, test_size = 0.3)
+xgb.fit(X_train,y_train)
+predictions = xgb.predict(X_test)
+print sum(np.absolute(predictions - y_test)) / len(y_test)
+
+
+
+
+
+
+
+
+
