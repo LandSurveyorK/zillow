@@ -6,7 +6,7 @@ train = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\k
 prop  = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\properties_2016.csv',header = 0)
 label = pd.read_excel(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\zillow_data_dictionary.xlsx',header = 0)
 
-############################# data observation ########################
+############################# data observating ########################
 
 data = pd.merge(train,prop,on ='parcelid')
 print(data.dtypes.unique())
