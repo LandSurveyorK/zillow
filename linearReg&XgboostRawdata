@@ -6,12 +6,16 @@ train = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\k
 prop  = pd.read_csv(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\properties_2016.csv',header = 0)
 label = pd.read_excel(r'C:\Users\kiky000\eclipse-workspace\HelloPython\src\Test1\kaggleZillowData\zillow_data_dictionary.xlsx',header = 0)
 
+############################# data observation ########################
+
 data = pd.merge(train,prop,on ='parcelid')
 print(data.dtypes.unique())
+
+# show 'object' variables
 data.select_dtypes(include=['O']).columns.tolist
-#
-[u'transactiondate', u'hashottuborspa', u'propertycountylandusecode',
-       u'propertyzoningdesc', u'fireplaceflag', u'taxdelinquencyflag']
+
+#[u'transactiondate', u'hashottuborspa', u'propertycountylandusecode',
+#      u'propertyzoningdesc', u'fireplaceflag', u'taxdelinquencyflag']
 
 # Check any number of columns with NaN
 print(data.isnull().any().sum(), ' / ', len(data.columns))
@@ -20,6 +24,7 @@ print(data.isnull().any().sum(), ' / ', len(data.columns))
 # Check any number of data points with NaN
 print(data.isnull().any(axis=1).sum(), ' / ', len(data))
 
+################################ data cleaning ############################
 
 count = 0
 featCountIn = []
@@ -61,8 +66,14 @@ for f in features:
     key = f + ' vs ' + target
     correlations[key] = pearsonr(x1,x2)[0]
     
+# show correaltions in order 
+
 data_correlations = pd.DataFrame(correlations, index=['Value']).T
 data_correlations.loc[data_correlations['Value'].abs().sort_values(ascending=False).index]
+
+
+
+############################### data modeling  #########################
 
 y = dataMat['logerror'].as_matrix()
 X = dataMat.drop(['logerror'], 1).as_matrix()
